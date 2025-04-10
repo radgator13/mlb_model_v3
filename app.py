@@ -71,12 +71,26 @@ with tab2:
     all_dates = sorted(results_df['date'].unique(), reverse=True)
     selected_log_date = st.selectbox("Select a log date", all_dates)
 
-    # Filter by date
-    df_filtered = results_df[results_df['date'] == selected_log_date]
+    # Filter to selected date
+    df_filtered = results_df[results_df['date'] == selected_log_date].copy()
 
-    # Accuracy summary
+    # Map predicted and actual winner to team names
+    df_filtered["predicted_winner"] = df_filtered.apply(
+        lambda row: row["home_team"] if row["predicted_winner"] == "home"
+        else row["away_team"], axis=1)
+
+    df_filtered["actual_winner"] = df_filtered.apply(
+        lambda row: row["home_team"] if row["actual_winner"] == "home"
+        else row["away_team"], axis=1)
+
+    # ✅/❌ formatting for is_correct
+    df_filtered["is_correct"] = df_filtered["is_correct"].apply(
+        lambda x: "✅" if x else "❌"
+    )
+
+    # Summary metrics
     total = len(df_filtered)
-    correct = df_filtered['is_correct'].sum()
+    correct = (df_filtered["is_correct"] == "✅").sum()
     accuracy = correct / total if total else 0
 
     st.metric("📈 Daily Accuracy", f"{accuracy:.2%}")
@@ -84,8 +98,11 @@ with tab2:
 
     # 🔥 Confidence filter
     min_conf = st.slider("Minimum Confidence 🔥 Level (1–5)", 1, 5, 1)
-    df_filtered['conf_score'] = df_filtered['confidence'].apply(lambda x: len(str(x)))
-    df_filtered = df_filtered[df_filtered['conf_score'] >= min_conf]
+    df_filtered["conf_score"] = df_filtered["confidence"].apply(lambda x: len(str(x)))
+    df_filtered = df_filtered[df_filtered["conf_score"] >= min_conf]
 
-    st.write(f"✅ Showing {len(df_filtered)} predictions from {selected_log_date} with confidence ≥ {min_conf}")
-    st.dataframe(df_filtered.drop(columns=['conf_score']).reset_index(drop=True), use_container_width=True)
+    # Display table
+    df_display = df_filtered.drop(columns=["conf_score"])
+    st.write(f"✅ Showing {len(df_display)} predictions from {selected_log_date} with confidence ≥ {min_conf}")
+    st.dataframe(df_display.reset_index(drop=True), use_container_width=True)
+
