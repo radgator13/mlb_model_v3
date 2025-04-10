@@ -20,9 +20,7 @@ TOTAL_MODEL = "mlb_total_model.pkl"
 
 OUTPUT_CSV = "predictions_latest.csv"
 ARCHIVE_CSV = f"predictions/predictions_{DATE_TODAY}.csv"
-
-DEFAULT_OU_LINE = 8.5
-DEFAULT_RUN_LINE = -1.5
+ODDS_PATH = f"odds_{DATE_TODAY}.csv"
 
 # === Load helpers
 def load_csv(path):
@@ -31,10 +29,10 @@ def load_csv(path):
 def ensure_boxscore_data_for_today():
     if not os.path.exists(BOX_PATH):
         subprocess.run(["python", "build_pending_boxscores.py"])
-        return
-    df = pd.read_csv(BOX_PATH)
-    if DATE_TODAY not in df['date'].astype(str).values:
-        subprocess.run(["python", "build_pending_boxscores.py"])
+    else:
+        df = pd.read_csv(BOX_PATH)
+        if DATE_TODAY not in df['date'].astype(str).values:
+            subprocess.run(["python", "build_pending_boxscores.py"])
 
 ensure_boxscore_data_for_today()
 
@@ -44,15 +42,14 @@ pitching = load_csv(PITCHING_PATH)
 batting = load_csv(BATTING_PATH)
 rolling = load_csv(ROLLING_STATS_PATH)
 strengths_df = load_csv(STRENGTH_PATH)
+team_strengths = dict(zip(strengths_df['team'], strengths_df['strength']))
 
-# Load models
+# === Load models
 win_model = joblib.load(WIN_MODEL)
 margin_model = joblib.load(MARGIN_MODEL)
 total_model = joblib.load(TOTAL_MODEL)
 
-team_strengths = dict(zip(strengths_df['team'], strengths_df['strength']))
-
-# === Filter to today's games
+# === Filter today's games
 games['date'] = pd.to_datetime(games['date']).dt.date.astype(str)
 todays_games = games[games['date'] == DATE_TODAY].copy()
 if todays_games.empty:
@@ -93,7 +90,7 @@ features_df['home_team'] = todays_games['home_team']
 features_df['away_team'] = todays_games['away_team']
 features_df = pd.get_dummies(features_df, columns=['home_team', 'away_team'])
 
-# Align features to models
+# === Align to model
 def align(df, model):
     missing = [col for col in model.get_booster().feature_names if col not in df.columns]
     for col in missing:
@@ -102,41 +99,49 @@ def align(df, model):
 
 X = align(features_df.copy(), win_model)
 
-# === Run Predictions
-probs = win_model.predict_proba(X)[:, 1]
-margin_preds = margin_model.predict(X)
-total_preds = total_model.predict(X)
+# === Predict
+todays_games['home_win_prob'] = win_model.predict_proba(X)[:, 1]
+todays_games['predicted_margin'] = margin_model.predict(X)
+todays_games['predicted_total_runs'] = total_model.predict(X)
 
-todays_games['home_win_prob'] = probs
-todays_games['predicted_margin'] = margin_preds
-todays_games['predicted_total_runs'] = total_preds
-
-# === Confidence scoring
+# === Confidence 🔥
 def confidence(prob):
     delta = abs(prob - 0.5)
     if delta >= 0.4: return "🔥🔥🔥🔥🔥"
-    if delta >= 0.3: return "🔥🔥🔥🔥"
-    if delta >= 0.2: return "🔥🔥🔥"
-    if delta >= 0.1: return "🔥🔥"
-    return "🔥"
+    elif delta >= 0.3: return "🔥🔥🔥🔥"
+    elif delta >= 0.2: return "🔥🔥🔥"
+    elif delta >= 0.1: return "🔥🔥"
+    else: return "🔥"
 
 todays_games['confidence'] = todays_games['home_win_prob'].apply(confidence)
 
-# === Betting edge logic
-todays_games['run_line_edge'] = todays_games['predicted_margin'].apply(
-    lambda m: "✅ Cover -1.5" if m > DEFAULT_RUN_LINE else "❌ Not likely"
+# === ALWAYS Overwrite odds file from model
+print(f"🔁 Overwriting odds file using model predictions: {ODDS_PATH}")
+odds_df = todays_games[['gamePk', 'home_team', 'away_team']].copy()
+odds_df['run_line'] = -1.5
+odds_df['ou_line'] = todays_games['predicted_total_runs'].round(1).apply(lambda x: round(x * 2) / 2)
+odds_df.to_csv(ODDS_PATH, index=False)
+print(f"✅ Created updated odds file: {ODDS_PATH}")
+
+# === Merge odds into game data
+odds_df = odds_df[['gamePk', 'run_line', 'ou_line']]
+todays_games = todays_games.merge(odds_df, on='gamePk', how='left')
+
+# === Edge logic
+todays_games['run_line_edge'] = todays_games.apply(
+    lambda row: "✅ Cover" if row['predicted_margin'] > row['run_line'] else "❌ No cover", axis=1
 )
 
-todays_games['ou_edge'] = todays_games['predicted_total_runs'].apply(
-    lambda t: "✅ Over 8.5" if t > DEFAULT_OU_LINE else "❌ Under"
+todays_games['ou_edge'] = todays_games.apply(
+    lambda row: "✅ Over" if row['predicted_total_runs'] > row['ou_line'] else "❌ Under", axis=1
 )
 
-# === Save output
+# === Save
 cols = [
     'date', 'gamePk', 'home_team', 'away_team',
     'home_win_prob', 'confidence',
-    'predicted_margin', 'run_line_edge',
-    'predicted_total_runs', 'ou_edge'
+    'predicted_margin', 'run_line', 'run_line_edge',
+    'predicted_total_runs', 'ou_line', 'ou_edge'
 ]
 
 todays_games[cols].to_csv(OUTPUT_CSV, index=False)

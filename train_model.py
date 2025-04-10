@@ -2,7 +2,7 @@
 import numpy as np
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.metrics import accuracy_score, roc_auc_score, mean_absolute_error
 import joblib
 import os
 
@@ -12,9 +12,11 @@ PITCHING_PATH = "mlb_pitching_stats_2025.csv"
 BATTING_PATH = "mlb_batting_stats_2025.csv"
 STRENGTH_PATH = "team_strengths.csv"
 ROLLING_STATS_PATH = "team_rolling_stats_2025.csv"
-OUTPUT_MODEL = "mlb_win_model.pkl"
+WIN_MODEL = "mlb_win_model.pkl"
+MARGIN_MODEL = "mlb_margin_model.pkl"
+TOTAL_MODEL = "mlb_total_model.pkl"
 
-# === Load CSVs ===
+# === Load CSVs
 def load_csv(path):
     return pd.read_csv(path) if os.path.exists(path) else pd.DataFrame()
 
@@ -24,19 +26,21 @@ batting = load_csv(BATTING_PATH)
 strengths_df = load_csv(STRENGTH_PATH)
 rolling_stats = load_csv(ROLLING_STATS_PATH)
 
-# === Validate team_strengths.csv
+# === Setup team strength lookup
 strengths_df.columns = [col.strip().lower() for col in strengths_df.columns]
 team_strengths = dict(zip(strengths_df['team'], strengths_df['strength']))
 
-# === Validate boxscore columns
-required_cols = {'home_runs', 'away_runs', 'gamePk', 'home_team', 'away_team'}
-if not required_cols.issubset(set(boxscores.columns)):
-    raise ValueError(f"❌ Missing required boxscore columns: {required_cols - set(boxscores.columns)}")
+# === Basic target variables
+required = {'home_runs', 'away_runs', 'gamePk', 'home_team', 'away_team'}
+if not required.issubset(set(boxscores.columns)):
+    raise ValueError("❌ Missing columns in boxscores")
 
 box = boxscores.copy()
 box['home_win'] = (box['home_runs'] > box['away_runs']).astype(int)
+box['total_runs'] = box['home_runs'] + box['away_runs']
+box['run_margin'] = box['home_runs'] - box['away_runs']
 
-# === Feature Engineering ===
+# === Feature builder
 def build_features(row):
     gamePk = row['gamePk']
 
@@ -68,39 +72,45 @@ def build_features(row):
     })
 
 features = box.apply(build_features, axis=1)
-target = box['home_win']
+features = features.dropna(thresh=int(features.shape[1] * 0.75)).copy()
 
-# === Clean data
-X = features.dropna(thresh=int(features.shape[1] * 0.75)).copy()
-y = target.loc[X.index]
+# === Targets
+win_target = box.loc[features.index, 'home_win']
+margin_target = box.loc[features.index, 'run_margin']
+total_target = box.loc[features.index, 'total_runs']
 
-# === Add team names using .loc to avoid SettingWithCopyWarning
-X.loc[:, 'home_team'] = box.loc[X.index, 'home_team']
-X.loc[:, 'away_team'] = box.loc[X.index, 'away_team']
+# === Team encoding
+features['home_team'] = box.loc[features.index, 'home_team']
+features['away_team'] = box.loc[features.index, 'away_team']
+features = pd.get_dummies(features, columns=['home_team', 'away_team'])
 
-# === One-hot encode teams
-X = pd.get_dummies(X, columns=['home_team', 'away_team'])
+# === Train/Test Split
+X_train, X_test, y_win_train, y_win_test = train_test_split(features, win_target, test_size=0.2, random_state=42, stratify=win_target)
+_, _, y_margin_train, y_margin_test = train_test_split(features, margin_target, test_size=0.2, random_state=42)
+_, _, y_total_train, y_total_test = train_test_split(features, total_target, test_size=0.2, random_state=42)
 
-# === Train/test split
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, stratify=y, random_state=42
-)
+# === Train Win Model (classifier)
+win_model = xgb.XGBClassifier(n_estimators=250, learning_rate=0.1, max_depth=4, eval_metric='logloss')
+win_model.fit(X_train, y_win_train)
+preds_win = win_model.predict(X_test)
+probs_win = win_model.predict_proba(X_test)[:, 1]
+print(f"✅ Accuracy (Win Model): {accuracy_score(y_win_test, preds_win):.3f}")
+print(f"✅ AUC (Win Model): {roc_auc_score(y_win_test, probs_win):.3f}")
 
-# === Train XGBoost
-model = xgb.XGBClassifier(
-    n_estimators=250,
-    learning_rate=0.1,
-    max_depth=4,
-    eval_metric='logloss'
-)
-model.fit(X_train, y_train)
+# === Train Run Margin Model (regression)
+margin_model = xgb.XGBRegressor(n_estimators=250, learning_rate=0.1, max_depth=4)
+margin_model.fit(X_train, y_margin_train)
+preds_margin = margin_model.predict(X_test)
+print(f"📏 MAE (Run Margin): {mean_absolute_error(y_margin_test, preds_margin):.2f}")
 
-# === Evaluate
-preds = model.predict(X_test)
-probs = model.predict_proba(X_test)[:, 1]
-print(f"✅ Accuracy: {accuracy_score(y_test, preds):.3f}")
-print(f"✅ AUC: {roc_auc_score(y_test, probs):.3f}")
+# === Train Total Runs Model (regression)
+total_model = xgb.XGBRegressor(n_estimators=250, learning_rate=0.1, max_depth=4)
+total_model.fit(X_train, y_total_train)
+preds_total = total_model.predict(X_test)
+print(f"📏 MAE (Total Runs): {mean_absolute_error(y_total_test, preds_total):.2f}")
 
-# === Save model
-joblib.dump(model, OUTPUT_MODEL)
-print(f"🎯 Model saved to {OUTPUT_MODEL}")
+# === Save all models
+joblib.dump(win_model, WIN_MODEL)
+joblib.dump(margin_model, MARGIN_MODEL)
+joblib.dump(total_model, TOTAL_MODEL)
+print(f"🎯 Models saved: {WIN_MODEL}, {MARGIN_MODEL}, {TOTAL_MODEL}")
