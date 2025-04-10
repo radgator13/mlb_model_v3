@@ -11,6 +11,7 @@ BOX_PATH = "mlb_boxscores_2025.csv"
 PITCHING_PATH = "mlb_pitching_stats_2025.csv"
 BATTING_PATH = "mlb_batting_stats_2025.csv"
 STRENGTH_PATH = "team_strengths.csv"
+ROLLING_STATS_PATH = "team_rolling_stats_2025.csv"
 OUTPUT_MODEL = "mlb_win_model.pkl"
 
 # === Load CSVs ===
@@ -21,18 +22,9 @@ boxscores = load_csv(BOX_PATH)
 pitching = load_csv(PITCHING_PATH)
 batting = load_csv(BATTING_PATH)
 strengths_df = load_csv(STRENGTH_PATH)
+rolling_stats = load_csv(ROLLING_STATS_PATH)
 
 # === Validate team_strengths.csv
-print("\n📄 Columns in team_strengths.csv:")
-print(strengths_df.columns.tolist())
-
-expected_cols = {'team', 'strength'}
-actual_cols = set([col.strip().lower() for col in strengths_df.columns])
-
-if not expected_cols.issubset(actual_cols):
-    raise ValueError("❌ team_strengths.csv must contain columns: 'team' and 'strength' (no extra spaces, case-insensitive)")
-
-# === Standardize and extract team strengths
 strengths_df.columns = [col.strip().lower() for col in strengths_df.columns]
 team_strengths = dict(zip(strengths_df['team'], strengths_df['strength']))
 
@@ -52,6 +44,10 @@ def build_features(row):
         df_sub = df[(df['gamePk'] == gamePk) & (df['team_side'] == side)]
         return df_sub[col].mean() if not df_sub.empty and col in df_sub else np.nan
 
+    def rolling_stat(side, col):
+        df_sub = rolling_stats[(rolling_stats['gamePk'] == gamePk) & (rolling_stats['team_side'] == side)]
+        return df_sub[col].values[0] if not df_sub.empty else np.nan
+
     return pd.Series({
         'home_pitcher_era': stat(pitching, 'home', 'era'),
         'away_pitcher_era': stat(pitching, 'away', 'era'),
@@ -63,20 +59,26 @@ def build_features(row):
         'away_runs': row['away_runs'],
         'home_strength': team_strengths.get(row['home_team'], 70),
         'away_strength': team_strengths.get(row['away_team'], 70),
+        'home_avg_runs_last5': rolling_stat('home', 'runs_scored_last5'),
+        'away_avg_runs_last5': rolling_stat('away', 'runs_scored_last5'),
+        'home_avg_runs_allowed_last5': rolling_stat('home', 'runs_allowed_last5'),
+        'away_avg_runs_allowed_last5': rolling_stat('away', 'runs_allowed_last5'),
+        'home_avg_hits_last5': rolling_stat('home', 'hits_last5'),
+        'away_avg_hits_last5': rolling_stat('away', 'hits_last5'),
     })
 
 features = box.apply(build_features, axis=1)
 target = box['home_win']
 
-# === Drop rows with too much missing data
-X = features.dropna(thresh=int(features.shape[1] * 0.75))
+# === Clean data
+X = features.dropna(thresh=int(features.shape[1] * 0.75)).copy()
 y = target.loc[X.index]
 
-# === Add team identifiers
-X['home_team'] = box.loc[X.index, 'home_team']
-X['away_team'] = box.loc[X.index, 'away_team']
+# === Add team names using .loc to avoid SettingWithCopyWarning
+X.loc[:, 'home_team'] = box.loc[X.index, 'home_team']
+X.loc[:, 'away_team'] = box.loc[X.index, 'away_team']
 
-# === One-hot encode team names
+# === One-hot encode teams
 X = pd.get_dummies(X, columns=['home_team', 'away_team'])
 
 # === Train/test split
@@ -84,7 +86,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, stratify=y, random_state=42
 )
 
-# === Train XGBoost model
+# === Train XGBoost
 model = xgb.XGBClassifier(
     n_estimators=250,
     learning_rate=0.1,

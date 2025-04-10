@@ -24,6 +24,7 @@
     <Compile Include="app.py" />
     <Compile Include="build_pending_boxscores.py" />
     <Compile Include="fill_missing_team_stats.py" />
+    <Compile Include="generate_rolling_stats.py" />
     <Compile Include="mlb_batting_scraper.py" />
     <Compile Include="mlb_fielding_stats_2025.py" />
     <Compile Include="mlb_game_context.py" />
@@ -35,6 +36,7 @@
     <Compile Include="train_model.py" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include=".gitignore" />
     <Content Include="team_strengths.csv" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />

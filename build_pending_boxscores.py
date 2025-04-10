@@ -2,8 +2,6 @@
 import pandas as pd
 import datetime
 
-# === Config ===
-DATE_TODAY = datetime.date.today().isoformat()  # or '2025-04-09' if testing
 OUTPUT_CSV = "pending_boxscores.csv"
 
 def get_schedule(date):
@@ -16,7 +14,10 @@ def get_schedule(date):
     data = res.json()
     return data.get("dates", [])[0].get("games", []) if data.get("dates") else []
 
-def build_pending_boxscores(date):
+def build_pending_boxscores(date=None):
+    if date is None:
+        date = datetime.date.today().isoformat()
+
     games = get_schedule(date)
     rows = []
 
@@ -29,13 +30,13 @@ def build_pending_boxscores(date):
             'date': date,
             'home_team': home,
             'away_team': away,
-            'home_runs': '',  # leave blank for pending
+            'home_runs': '',
             'away_runs': '',
         })
 
     df = pd.DataFrame(rows)
     df.to_csv(OUTPUT_CSV, index=False)
-    print(f"✅ Created {OUTPUT_CSV} with {len(df)} games.")
+    print(f"✅ Created {OUTPUT_CSV} with {len(df)} games for {date}")
 
 if __name__ == "__main__":
-    build_pending_boxscores("2025-04-09")  # or DATE_TODAY if you prefer
+    build_pending_boxscores()

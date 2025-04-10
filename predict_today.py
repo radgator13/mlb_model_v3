@@ -3,21 +3,17 @@ import numpy as np
 import datetime
 import os
 import joblib
+import subprocess
 
+# === Date setup ===
 DATE_TODAY = datetime.date.today().isoformat()
 
 # === File paths ===
-if os.path.exists("game_boxscores.csv"):
-    BOX_PATH = "game_boxscores.csv"
-elif os.path.exists("pending_boxscores.csv"):
-    BOX_PATH = "pending_boxscores.csv"
-else:
-    print("❌ No boxscore file found.")
-    exit()
-
+BOX_PATH = "pending_boxscores.csv"
 PITCHING_PATH = "mlb_pitching_stats_2025.csv"
 BATTING_PATH = "mlb_batting_stats_2025.csv"
 STRENGTH_PATH = "team_strengths.csv"
+ROLLING_STATS_PATH = "team_rolling_stats_2025.csv"
 MODEL_PATH = "mlb_win_model.pkl"
 OUTPUT_CSV = f"predictions_{DATE_TODAY}.csv"
 
@@ -25,31 +21,52 @@ OUTPUT_CSV = f"predictions_{DATE_TODAY}.csv"
 def load_csv(path):
     return pd.read_csv(path) if os.path.exists(path) else pd.DataFrame()
 
+# === Step 1: Check pending_boxscores.csv for today's games
+def ensure_boxscore_data_for_today():
+    if not os.path.exists(BOX_PATH):
+        print("⚠️ pending_boxscores.csv not found. Attempting to generate it...")
+        subprocess.run(["python", "build_pending_boxscores.py"])
+        return
+
+    df = pd.read_csv(BOX_PATH)
+    if DATE_TODAY not in df['date'].astype(str).values:
+        print(f"⚠️ No games for today ({DATE_TODAY}) found. Rebuilding pending_boxscores.csv...")
+        subprocess.run(["python", "build_pending_boxscores.py"])
+
+# === Step 2: Run the check/generation
+ensure_boxscore_data_for_today()
+
+# === Load all required data
 games = load_csv(BOX_PATH)
 pitching = load_csv(PITCHING_PATH)
 batting = load_csv(BATTING_PATH)
+rolling_stats = load_csv(ROLLING_STATS_PATH)
 strengths_df = load_csv(STRENGTH_PATH)
 team_strengths = dict(zip(strengths_df['team'], strengths_df['strength']))
 
-# === Filter today's games
+# === Filter for today
 todays_games = games[games['date'] == DATE_TODAY].copy()
 if todays_games.empty:
     print(f"No games found for today: {DATE_TODAY}")
     exit()
 
+# === Load model
 if not os.path.exists(MODEL_PATH):
     print(f"❌ Model not found at {MODEL_PATH}")
     exit()
-
 model = joblib.load(MODEL_PATH)
 
-# === Feature engineering
+# === Build features
 def build_features(row):
     gamePk = row['gamePk']
 
     def safe_stat(df, side, col):
         df_sub = df[(df['gamePk'] == gamePk) & (df['team_side'] == side)]
         return df_sub[col].mean() if not df_sub.empty and col in df_sub else np.nan
+
+    def rolling_stat(side, col):
+        df_sub = rolling_stats[(rolling_stats['gamePk'] == gamePk) & (rolling_stats['team_side'] == side)]
+        return df_sub[col].values[0] if not df_sub.empty else np.nan
 
     return pd.Series({
         'home_pitcher_era': safe_stat(pitching, 'home', 'era'),
@@ -62,15 +79,20 @@ def build_features(row):
         'away_runs': row.get('away_runs', np.nan),
         'home_strength': team_strengths.get(row['home_team'], 70),
         'away_strength': team_strengths.get(row['away_team'], 70),
+        'home_avg_runs_last5': rolling_stat('home', 'runs_scored_last5'),
+        'away_avg_runs_last5': rolling_stat('away', 'runs_scored_last5'),
+        'home_avg_runs_allowed_last5': rolling_stat('home', 'runs_allowed_last5'),
+        'away_avg_runs_allowed_last5': rolling_stat('away', 'runs_allowed_last5'),
+        'home_avg_hits_last5': rolling_stat('home', 'hits_last5'),
+        'away_avg_hits_last5': rolling_stat('away', 'hits_last5'),
     })
 
 features_df = todays_games.apply(build_features, axis=1)
 features_df['home_team'] = todays_games['home_team']
 features_df['away_team'] = todays_games['away_team']
-
 features_df = pd.get_dummies(features_df, columns=['home_team', 'away_team'])
 
-# === Align columns to model
+# === Align with model
 missing_cols = [col for col in model.get_booster().feature_names if col not in features_df.columns]
 for col in missing_cols:
     features_df[col] = 0
@@ -80,7 +102,7 @@ features_df = features_df[model.get_booster().feature_names]
 probs = model.predict_proba(features_df)[:, 1]
 todays_games['home_win_prob'] = probs
 
-# === Add confidence scores
+# === Add confidence
 def add_confidence(prob):
     delta = abs(prob - 0.5)
     if delta >= 0.4:
@@ -96,7 +118,7 @@ def add_confidence(prob):
 
 todays_games['confidence'] = todays_games['home_win_prob'].apply(add_confidence)
 
-# === Export
+# === Output
 cols = ['date', 'gamePk', 'home_team', 'away_team', 'home_win_prob', 'confidence']
 todays_games[cols].to_csv(OUTPUT_CSV, index=False)
 print(f"✅ Saved predictions to {OUTPUT_CSV}")
