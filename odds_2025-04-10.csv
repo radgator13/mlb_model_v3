@@ -1,7 +1,4 @@
 gamePk,home_team,away_team,run_line,ou_line
-778382,Tampa Bay Rays,Los Angeles Angels,-1.5,3.0
-778378,Cleveland Guardians,Chicago White Sox,-1.5,4.0
-778373,Kansas City Royals,Minnesota Twins,-1.5,3.5
-778371,Colorado Rockies,Milwaukee Brewers,-1.5,3.0
-778377,Boston Red Sox,Toronto Blue Jays,-1.5,4.0
-778384,Atlanta Braves,Philadelphia Phillies,-1.5,4.5
+778371,Colorado Rockies,Milwaukee Brewers,1.5,7.5
+778377,Boston Red Sox,Toronto Blue Jays,-1.5,3.5
+778384,Atlanta Braves,Philadelphia Phillies,-1.5,7.5
