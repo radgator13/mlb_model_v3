@@ -128,9 +128,15 @@ odds_df = odds_df[['gamePk', 'run_line', 'ou_line']]
 todays_games = todays_games.merge(odds_df, on='gamePk', how='left')
 
 # === Edge logic
-todays_games['run_line_edge'] = todays_games.apply(
-    lambda row: "✅ Cover" if row['predicted_margin'] > row['run_line'] else "❌ No cover", axis=1
-)
+def run_line_edge(row):
+    if row['predicted_margin'] > row['run_line']:
+        return f"✅ {row['home_team']} Cover"
+    else:
+        return f"❌ {row['away_team']} Cover"
+
+todays_games['run_line_edge'] = todays_games.apply(run_line_edge, axis=1)
+
+
 
 todays_games['ou_edge'] = todays_games.apply(
     lambda row: "✅ Over" if row['predicted_total_runs'] > row['ou_line'] else "❌ Under", axis=1
