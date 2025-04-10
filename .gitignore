@@ -17,3 +17,7 @@ predictions_*.csv
 
 # Allow one "live" prediction file
 !predictions_latest.csv
+
+# But allow latest and archived folder
+!predictions_latest.csv
+!/predictions/

@@ -5,21 +5,24 @@ import os
 import joblib
 import subprocess
 
+# === Today's date
 DATE_TODAY = datetime.date.today().isoformat()
 
-# === File paths ===
+# === File paths
 BOX_PATH = "pending_boxscores.csv"
 PITCHING_PATH = "mlb_pitching_stats_2025.csv"
 BATTING_PATH = "mlb_batting_stats_2025.csv"
 STRENGTH_PATH = "team_strengths.csv"
 ROLLING_STATS_PATH = "team_rolling_stats_2025.csv"
 MODEL_PATH = "mlb_win_model.pkl"
-OUTPUT_CSV = "predictions_latest.csv"  # <== always export to this!
+OUTPUT_CSV_LATEST = "predictions_latest.csv"
+OUTPUT_CSV_DATED = f"predictions_{DATE_TODAY}.csv"
 
-# === Load CSVs ===
+# === Load CSVs
 def load_csv(path):
     return pd.read_csv(path) if os.path.exists(path) else pd.DataFrame()
 
+# === Ensure today's boxscore data exists
 def ensure_boxscore_data_for_today():
     if not os.path.exists(BOX_PATH):
         print("⚠️ pending_boxscores.csv not found. Generating it...")
@@ -31,7 +34,6 @@ def ensure_boxscore_data_for_today():
         print(f"⚠️ No games for today ({DATE_TODAY}) found. Rebuilding...")
         subprocess.run(["python", "build_pending_boxscores.py"])
 
-# === Generate boxscores if needed
 ensure_boxscore_data_for_today()
 
 # === Load data
@@ -42,18 +44,20 @@ rolling_stats = load_csv(ROLLING_STATS_PATH)
 strengths_df = load_csv(STRENGTH_PATH)
 team_strengths = dict(zip(strengths_df['team'], strengths_df['strength']))
 
+# === Filter for today's games
 games['date'] = pd.to_datetime(games['date']).dt.date.astype(str)
 todays_games = games[games['date'] == DATE_TODAY].copy()
 if todays_games.empty:
     print(f"No games found for today: {DATE_TODAY}")
     exit()
 
+# === Load model
 if not os.path.exists(MODEL_PATH):
     print(f"❌ Model not found at {MODEL_PATH}")
     exit()
 model = joblib.load(MODEL_PATH)
 
-# === Feature engineering
+# === Feature builder
 def build_features(row):
     gamePk = row['gamePk']
 
@@ -84,21 +88,23 @@ def build_features(row):
         'away_avg_hits_last5': rolling_stat('away', 'hits_last5'),
     })
 
+# === Apply features
 features_df = todays_games.apply(build_features, axis=1)
 features_df['home_team'] = todays_games['home_team']
 features_df['away_team'] = todays_games['away_team']
 features_df = pd.get_dummies(features_df, columns=['home_team', 'away_team'])
 
+# === Align features with model
 missing_cols = [col for col in model.get_booster().feature_names if col not in features_df.columns]
 for col in missing_cols:
     features_df[col] = 0
 features_df = features_df[model.get_booster().feature_names]
 
-# === Predict
+# === Make predictions
 probs = model.predict_proba(features_df)[:, 1]
 todays_games['home_win_prob'] = probs
 
-# === Add confidence
+# === Add confidence score
 def add_confidence(prob):
     delta = abs(prob - 0.5)
     if delta >= 0.4:
@@ -114,8 +120,30 @@ def add_confidence(prob):
 
 todays_games['confidence'] = todays_games['home_win_prob'].apply(add_confidence)
 
-# === Export to fixed name
+# === Output columns
 cols = ['date', 'gamePk', 'home_team', 'away_team', 'home_win_prob', 'confidence']
-todays_games[cols].to_csv(OUTPUT_CSV, index=False)
-print(f"✅ Saved predictions to {OUTPUT_CSV}")
+
+# === Save both latest and dated files
+todays_games[cols].to_csv(OUTPUT_CSV_LATEST, index=False)
+todays_games[cols].to_csv(OUTPUT_CSV_DATED, index=False)
+
+print(f"✅ Saved predictions to:\n- {OUTPUT_CSV_LATEST}\n- {OUTPUT_CSV_DATED}")
 print(todays_games[cols])
+# === Output columns
+cols = ['date', 'gamePk', 'home_team', 'away_team', 'home_win_prob', 'confidence']
+
+# === Save predictions
+latest_path = "predictions_latest.csv"
+archive_folder = "predictions"
+dated_path = os.path.join(archive_folder, f"predictions_{DATE_TODAY}.csv")
+
+# Create folder if it doesn't exist
+os.makedirs(archive_folder, exist_ok=True)
+
+# Save both
+todays_games[cols].to_csv(latest_path, index=False)
+todays_games[cols].to_csv(dated_path, index=False)
+
+print(f"✅ Saved predictions to:")
+print(f"  - {latest_path}")
+print(f"  - {dated_path}")
