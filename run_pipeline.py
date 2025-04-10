@@ -31,7 +31,7 @@ subprocess.run(["python", "fetch_odds.py"], check=True)
 print("🧠 Step 3: Running model predictions...")
 subprocess.run(["python", "predict_today.py"], check=True)
 
-# === Step 4: Archive latest prediction to dated file
+# === Step 4: Archive prediction file
 os.makedirs(ARCHIVE_FOLDER, exist_ok=True)
 if os.path.exists(LATEST_FILE):
     shutil.copy(LATEST_FILE, TODAY_FILE)
@@ -68,7 +68,6 @@ def log_results(prediction_file, date_str):
     log_cols = ['date', 'gamePk', 'home_team', 'away_team', 'home_win_prob',
                 'predicted_winner', 'actual_winner', 'is_correct', 'confidence']
 
-    # Include edge data if present
     if 'run_line' in pred_df.columns and 'run_line_edge' in pred_df.columns:
         log_cols += ['run_line', 'run_line_edge']
     if 'ou_line' in pred_df.columns and 'ou_edge' in pred_df.columns:
@@ -76,7 +75,7 @@ def log_results(prediction_file, date_str):
 
     merged = merged[log_cols]
 
-    # Merge into results log
+    # Dedup existing
     if os.path.exists(RESULTS_LOG):
         existing = pd.read_csv(RESULTS_LOG)
         existing = existing[~((existing['date'] == date_str) & (existing['gamePk'].isin(merged['gamePk'])))]
@@ -88,13 +87,18 @@ def log_results(prediction_file, date_str):
 log_results(TODAY_FILE, DATE_TODAY)
 log_results(YESTERDAY_FILE, DATE_YESTERDAY)
 
-# === Step 6: Git push
+# === Step 6: Git commit and push everything
 print("🚀 Step 6: Committing and pushing to GitHub...")
-subprocess.run(["git", "add", "-f", LATEST_FILE, TODAY_FILE, RESULTS_LOG, ODDS_FILE], check=True)
-subprocess.run(["git", "commit", "-m", f'📈 Auto-pipeline update for {DATE_TODAY} + backfill {DATE_YESTERDAY}'], check=False)
+subprocess.run([
+    "git", "add", "-f",
+    LATEST_FILE, TODAY_FILE, RESULTS_LOG, ODDS_FILE,
+    "predict_today.py", "fetch_odds.py", "run_pipeline.py", "train_model.py"
+], check=True)
+
+subprocess.run(["git", "commit", "-m", f'📈 Full auto-pipeline update for {DATE_TODAY}'], check=False)
 subprocess.run(["git", "push", "origin", "master"], check=True)
 
-# === Step 7: Clean up duplicate logs
+# === Step 7: Clean duplicates from results log
 if os.path.exists(RESULTS_LOG):
     df = pd.read_csv(RESULTS_LOG)
     df = df[df['actual_winner'].isin(['home', 'away'])]
