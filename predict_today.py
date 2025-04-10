@@ -115,19 +115,16 @@ def confidence(prob):
 
 todays_games['confidence'] = todays_games['home_win_prob'].apply(confidence)
 
-# === ALWAYS Overwrite odds file from model
-print(f"🔁 Overwriting odds file using model predictions: {ODDS_PATH}")
-odds_df = todays_games[['gamePk', 'home_team', 'away_team']].copy()
-odds_df['run_line'] = -1.5
-odds_df['ou_line'] = todays_games['predicted_total_runs'].round(1).apply(lambda x: round(x * 2) / 2)
-odds_df.to_csv(ODDS_PATH, index=False)
-print(f"✅ Created updated odds file: {ODDS_PATH}")
+# === Load real odds file (from fetch_odds.py)
+if not os.path.exists(ODDS_PATH):
+    print(f"❌ Odds file not found: {ODDS_PATH}. Please run fetch_odds.py first.")
+    exit()
 
-# === Merge odds into game data
+odds_df = load_csv(ODDS_PATH)
 odds_df = odds_df[['gamePk', 'run_line', 'ou_line']]
 todays_games = todays_games.merge(odds_df, on='gamePk', how='left')
 
-# === Edge logic
+# === Run line edge (with team)
 def run_line_edge(row):
     if row['predicted_margin'] > row['run_line']:
         return f"✅ {row['home_team']} Cover"
@@ -136,10 +133,9 @@ def run_line_edge(row):
 
 todays_games['run_line_edge'] = todays_games.apply(run_line_edge, axis=1)
 
-
-
+# === O/U edge
 todays_games['ou_edge'] = todays_games.apply(
-    lambda row: "✅ Over" if row['predicted_total_runs'] > row['ou_line'] else "❌ Under", axis=1
+    lambda row: f"✅ Over" if row['predicted_total_runs'] > row['ou_line'] else "❌ Under", axis=1
 )
 
 # === Save
