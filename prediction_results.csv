@@ -1,10 +1,6 @@
 date,gamePk,home_team,away_team,home_win_prob,predicted_winner,actual_winner,is_correct,confidence,run_line,run_line_edge,ou_line,ou_edge
 2025-04-10,778382,Tampa Bay Rays,Los Angeles Angels,0.6493651,home,away,False,🔥🔥,,❌ Los Angeles Angels Cover,,❌ Under
 2025-04-10,778378,Cleveland Guardians,Chicago White Sox,0.6493651,home,home,True,🔥🔥,,❌ Chicago White Sox Cover,,❌ Under
-2025-04-10,778373,Kansas City Royals,Minnesota Twins,0.6532773,home,tie,False,🔥🔥,,❌ Minnesota Twins Cover,,❌ Under
-2025-04-10,778371,Colorado Rockies,Milwaukee Brewers,0.6532773,home,tie,False,🔥🔥,1.5,❌ Milwaukee Brewers Cover,7.5,❌ Under
-2025-04-10,778377,Boston Red Sox,Toronto Blue Jays,0.70437753,home,tie,False,🔥🔥🔥,-1.5,✅ Boston Red Sox Cover,3.5,✅ Over
-2025-04-10,778384,Atlanta Braves,Philadelphia Phillies,0.70437753,home,tie,False,🔥🔥🔥,-1.5,❌ Philadelphia Phillies Cover,7.5,❌ Under
 2025-04-09,778389,Pittsburgh Pirates,St. Louis Cardinals,0.7223345,home,home,True,🔥🔥🔥,,,,
 2025-04-09,778390,New York Mets,Miami Marlins,0.6673211,home,away,False,🔥🔥,,,,
 2025-04-09,778387,Detroit Tigers,New York Yankees,0.65962905,home,away,False,🔥🔥,,,,

@@ -55,7 +55,14 @@ def log_results(prediction_file, date_str):
 
     merged = pred_df.merge(box_df, on='gamePk', how='left')
 
-    # Basic result tracking
+    # ❗ Skip games with missing final scores
+    merged = merged.dropna(subset=['home_runs', 'away_runs'])
+
+    if merged.empty:
+        print(f"⏳ No completed games to log for {date_str}")
+        return
+
+    # Standard result columns
     merged['actual_winner'] = merged.apply(
         lambda row: "home" if row["home_runs"] > row["away_runs"] else
                     "away" if row["home_runs"] < row["away_runs"] else "tie",
@@ -75,30 +82,29 @@ def log_results(prediction_file, date_str):
 
     merged = merged[log_cols]
 
-    # Dedup existing
     if os.path.exists(RESULTS_LOG):
         existing = pd.read_csv(RESULTS_LOG)
         existing = existing[~((existing['date'] == date_str) & (existing['gamePk'].isin(merged['gamePk'])))]
         merged = pd.concat([existing, merged], ignore_index=True)
 
     merged.to_csv(RESULTS_LOG, index=False)
-    print(f"📊 Logged prediction results for {date_str} to {RESULTS_LOG}")
+    print(f"📊 Logged {len(merged)} completed predictions for {date_str} into {RESULTS_LOG}")
 
 log_results(TODAY_FILE, DATE_TODAY)
 log_results(YESTERDAY_FILE, DATE_YESTERDAY)
 
-# === Step 6: Git commit and push everything
-print("🚀 Step 6: Committing and pushing to GitHub...")
+# === Step 6: Git commit and push
+print("🚀 Step 6: Committing and pushing updates to GitHub...")
 subprocess.run([
     "git", "add", "-f",
     LATEST_FILE, TODAY_FILE, RESULTS_LOG, ODDS_FILE,
     "predict_today.py", "fetch_odds.py", "run_pipeline.py", "train_model.py"
 ], check=True)
 
-subprocess.run(["git", "commit", "-m", f'📈 Full auto-pipeline update for {DATE_TODAY}'], check=False)
+subprocess.run(["git", "commit", "-m", f'📈 Pipeline update with completed-game logging for {DATE_TODAY}'], check=False)
 subprocess.run(["git", "push", "origin", "master"], check=True)
 
-# === Step 7: Clean duplicates from results log
+# === Step 7: Clean duplicate logs
 if os.path.exists(RESULTS_LOG):
     df = pd.read_csv(RESULTS_LOG)
     df = df[df['actual_winner'].isin(['home', 'away'])]
@@ -106,6 +112,6 @@ if os.path.exists(RESULTS_LOG):
     df = df.drop_duplicates(subset=["date", "gamePk"], keep="first")
     df = df.sort_values(by=["date", "gamePk"]).reset_index(drop=True)
     df.to_csv(RESULTS_LOG, index=False)
-    print(f"🧹 Cleaned duplicates in {RESULTS_LOG}. Rows now: {len(df)}")
+    print(f"🧹 Cleaned duplicates in {RESULTS_LOG}. Final rows: {len(df)}")
 
 print("✅ All steps completed. Dashboard is up to date.")
