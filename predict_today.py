@@ -124,19 +124,23 @@ odds_df = load_csv(ODDS_PATH)
 odds_df = odds_df[['gamePk', 'run_line', 'ou_line']]
 todays_games = todays_games.merge(odds_df, on='gamePk', how='left')
 
-# === Run line edge (with team)
+# === Run line edge (clean format)
 def run_line_edge(row):
-    if row['predicted_margin'] > row['run_line']:
-        return f"✅ {row['home_team']} Cover"
-    else:
-        return f"❌ {row['away_team']} Cover"
+    if pd.isna(row['run_line']):
+        return "N/A"
+    team = row['home_team'] if row['run_line'] < 0 else row['away_team']
+    side = "-1.5" if row['run_line'] < 0 else "+1.5"
+    return f"{team} {side} Cover"
 
 todays_games['run_line_edge'] = todays_games.apply(run_line_edge, axis=1)
 
-# === O/U edge
-todays_games['ou_edge'] = todays_games.apply(
-    lambda row: f"✅ Over" if row['predicted_total_runs'] > row['ou_line'] else "❌ Under", axis=1
-)
+# === O/U edge (clean format)
+def ou_edge(row):
+    if pd.isna(row['ou_line']):
+        return "N/A"
+    return f"Over {row['ou_line']}" if row['predicted_total_runs'] > row['ou_line'] else f"Under {row['ou_line']}"
+
+todays_games['ou_edge'] = todays_games.apply(ou_edge, axis=1)
 
 # === Save
 cols = [
