@@ -1,7 +1,7 @@
 date,gamePk,home_team,away_team,home_win_prob,confidence,predicted_margin,run_line,run_line_edge,predicted_total_runs,ou_line,ou_edge
-2025-04-10,778382,Tampa Bay Rays,Los Angeles Angels,0.6493651,🔥🔥,-3.583866,-1.5,❌ No cover,3.2387857,3.0,✅ Over
-2025-04-10,778378,Cleveland Guardians,Chicago White Sox,0.6493651,🔥🔥,-0.028121658,-1.5,✅ Cover,3.784102,4.0,❌ Under
-2025-04-10,778373,Kansas City Royals,Minnesota Twins,0.6532773,🔥🔥,-1.3046108,-1.5,✅ Cover,3.6589189,3.5,✅ Over
-2025-04-10,778371,Colorado Rockies,Milwaukee Brewers,0.6532773,🔥🔥,0.5867243,-1.5,✅ Cover,2.9294465,3.0,❌ Under
-2025-04-10,778377,Boston Red Sox,Toronto Blue Jays,0.70437753,🔥🔥🔥,1.4294428,-1.5,✅ Cover,3.8953485,4.0,❌ Under
-2025-04-10,778384,Atlanta Braves,Philadelphia Phillies,0.70437753,🔥🔥🔥,-1.5285044,-1.5,❌ No cover,4.422733,4.5,❌ Under
+2025-04-10,778382,Tampa Bay Rays,Los Angeles Angels,0.6493651,🔥🔥,-3.583866,-1.5,❌ Los Angeles Angels Cover,3.2387857,3.0,✅ Over
+2025-04-10,778378,Cleveland Guardians,Chicago White Sox,0.6493651,🔥🔥,-0.028121658,-1.5,✅ Cleveland Guardians Cover,3.784102,4.0,❌ Under
+2025-04-10,778373,Kansas City Royals,Minnesota Twins,0.6532773,🔥🔥,-1.3046108,-1.5,✅ Kansas City Royals Cover,3.6589189,3.5,✅ Over
+2025-04-10,778371,Colorado Rockies,Milwaukee Brewers,0.6532773,🔥🔥,0.5867243,-1.5,✅ Colorado Rockies Cover,2.9294465,3.0,❌ Under
+2025-04-10,778377,Boston Red Sox,Toronto Blue Jays,0.70437753,🔥🔥🔥,1.4294428,-1.5,✅ Boston Red Sox Cover,3.8953485,4.0,❌ Under
+2025-04-10,778384,Atlanta Braves,Philadelphia Phillies,0.70437753,🔥🔥🔥,-1.5285044,-1.5,❌ Philadelphia Phillies Cover,4.422733,4.5,❌ Under
