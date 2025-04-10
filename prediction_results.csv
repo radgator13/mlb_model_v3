@@ -1,37 +1,16 @@
 date,gamePk,home_team,away_team,home_win_prob,predicted_winner,actual_winner,is_correct,confidence
-2025-04-10,778382,Tampa Bay Rays,Los Angeles Angels,0.9089371,home,tie,False,🔥🔥🔥🔥🔥
-2025-04-10,778378,Cleveland Guardians,Chicago White Sox,0.9089371,home,tie,False,🔥🔥🔥🔥🔥
-2025-04-10,778373,Kansas City Royals,Minnesota Twins,0.9276872,home,tie,False,🔥🔥🔥🔥🔥
-2025-04-10,778371,Colorado Rockies,Milwaukee Brewers,0.9302389,home,tie,False,🔥🔥🔥🔥🔥
-2025-04-10,778377,Boston Red Sox,Toronto Blue Jays,0.9440183,home,tie,False,🔥🔥🔥🔥🔥
-2025-04-10,778384,Atlanta Braves,Philadelphia Phillies,0.9440183,home,tie,False,🔥🔥🔥🔥🔥
-2025-04-09,778389,Pittsburgh Pirates,St. Louis Cardinals,0.7223345,home,tie,False,🔥🔥🔥
-2025-04-09,778390,New York Mets,Miami Marlins,0.6673211,home,away,False,🔥🔥
-2025-04-09,778387,Detroit Tigers,New York Yankees,0.65962905,home,tie,False,🔥🔥
-2025-04-09,778385,Chicago Cubs,Texas Rangers,0.82906455,home,tie,False,🔥🔥🔥🔥
-2025-04-09,778381,Athletics,San Diego Padres,0.6403326,home,tie,False,🔥🔥
-2025-04-09,778380,Arizona Diamondbacks,Baltimore Orioles,0.7246199,home,tie,False,🔥🔥🔥
-2025-04-09,778376,San Francisco Giants,Cincinnati Reds,0.60523564,home,tie,False,🔥🔥
-2025-04-09,778392,Washington Nationals,Los Angeles Dodgers,0.65605396,home,tie,False,🔥🔥
-2025-04-09,778383,Seattle Mariners,Houston Astros,0.82906455,home,tie,False,🔥🔥🔥🔥
-2025-04-09,778391,Cleveland Guardians,Chicago White Sox,0.8068285,home,tie,False,🔥🔥🔥🔥
-2025-04-09,778386,Boston Red Sox,Toronto Blue Jays,0.82906455,home,tie,False,🔥🔥🔥🔥
-2025-04-09,778399,Tampa Bay Rays,Los Angeles Angels,0.8068285,home,tie,False,🔥🔥🔥🔥
-2025-04-09,778393,Atlanta Braves,Philadelphia Phillies,0.82906455,home,tie,False,🔥🔥🔥🔥
-2025-04-09,778388,Kansas City Royals,Minnesota Twins,0.6428956,home,tie,False,🔥🔥
-2025-04-09,778379,Colorado Rockies,Milwaukee Brewers,0.65605396,home,tie,False,🔥🔥
+2025-04-09,778376,San Francisco Giants,Cincinnati Reds,0.60523564,home,home,True,🔥🔥
+2025-04-09,778379,Colorado Rockies,Milwaukee Brewers,0.65605396,home,away,False,🔥🔥
+2025-04-09,778380,Arizona Diamondbacks,Baltimore Orioles,0.7246199,home,home,True,🔥🔥🔥
+2025-04-09,778381,Athletics,San Diego Padres,0.6403326,home,away,False,🔥🔥
+2025-04-09,778383,Seattle Mariners,Houston Astros,0.82906455,home,home,True,🔥🔥🔥🔥
+2025-04-09,778385,Chicago Cubs,Texas Rangers,0.82906455,home,away,False,🔥🔥🔥🔥
+2025-04-09,778386,Boston Red Sox,Toronto Blue Jays,0.82906455,home,away,False,🔥🔥🔥🔥
+2025-04-09,778387,Detroit Tigers,New York Yankees,0.65962905,home,away,False,🔥🔥
+2025-04-09,778388,Kansas City Royals,Minnesota Twins,0.6428956,home,away,False,🔥🔥
 2025-04-09,778389,Pittsburgh Pirates,St. Louis Cardinals,0.7223345,home,home,True,🔥🔥🔥
 2025-04-09,778390,New York Mets,Miami Marlins,0.6673211,home,away,False,🔥🔥
-2025-04-09,778387,Detroit Tigers,New York Yankees,0.65962905,home,away,False,🔥🔥
-2025-04-09,778385,Chicago Cubs,Texas Rangers,0.82906455,home,away,False,🔥🔥🔥🔥
-2025-04-09,778381,Athletics,San Diego Padres,0.6403326,home,away,False,🔥🔥
-2025-04-09,778380,Arizona Diamondbacks,Baltimore Orioles,0.7246199,home,home,True,🔥🔥🔥
-2025-04-09,778376,San Francisco Giants,Cincinnati Reds,0.60523564,home,home,True,🔥🔥
-2025-04-09,778392,Washington Nationals,Los Angeles Dodgers,0.65605396,home,away,False,🔥🔥
-2025-04-09,778383,Seattle Mariners,Houston Astros,0.82906455,home,home,True,🔥🔥🔥🔥
 2025-04-09,778391,Cleveland Guardians,Chicago White Sox,0.8068285,home,home,True,🔥🔥🔥🔥
-2025-04-09,778386,Boston Red Sox,Toronto Blue Jays,0.82906455,home,away,False,🔥🔥🔥🔥
-2025-04-09,778399,Tampa Bay Rays,Los Angeles Angels,0.8068285,home,home,True,🔥🔥🔥🔥
+2025-04-09,778392,Washington Nationals,Los Angeles Dodgers,0.65605396,home,away,False,🔥🔥
 2025-04-09,778393,Atlanta Braves,Philadelphia Phillies,0.82906455,home,away,False,🔥🔥🔥🔥
-2025-04-09,778388,Kansas City Royals,Minnesota Twins,0.6428956,home,away,False,🔥🔥
-2025-04-09,778379,Colorado Rockies,Milwaukee Brewers,0.65605396,home,away,False,🔥🔥
+2025-04-09,778399,Tampa Bay Rays,Los Angeles Angels,0.8068285,home,home,True,🔥🔥🔥🔥
