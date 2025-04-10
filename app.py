@@ -36,12 +36,17 @@ with tab1:
         st.error(f"❌ Could not load {selected_csv}")
         st.stop()
 
+    # === Round numeric columns if they exist
     df['home_win_prob'] = df['home_win_prob'].astype(float).round(3)
-    df['predicted_margin'] = df['predicted_margin'].round(4)
-    df['predicted_total_runs'] = df['predicted_total_runs'].round(4)
+
+    if 'predicted_margin' in df.columns:
+        df['predicted_margin'] = df['predicted_margin'].round(4)
+    if 'predicted_total_runs' in df.columns:
+        df['predicted_total_runs'] = df['predicted_total_runs'].round(4)
 
     df = df.sort_values(by='home_win_prob', ascending=False)
 
+    # === Sidebar filter
     teams = sorted(set(df['home_team']) | set(df['away_team']))
     team_filter = st.sidebar.multiselect("Filter by Team", teams)
 
@@ -77,7 +82,7 @@ with tab2:
     df_filtered["actual_winner"] = df_filtered.apply(
         lambda row: row["home_team"] if row["actual_winner"] == "home" else row["away_team"], axis=1)
 
-    # Convert boolean to text
+    # Convert boolean to readable
     df_filtered["is_correct"] = df_filtered["is_correct"].apply(lambda x: "Correct" if x else "Wrong")
 
     # 🔥 Confidence filter
@@ -85,7 +90,7 @@ with tab2:
     df_filtered["conf_score"] = df_filtered["confidence"].apply(lambda x: len(str(x)))
     df_filtered = df_filtered[df_filtered["conf_score"] >= min_conf]
 
-    # Clean up edge columns (remove emojis if they exist)
+    # Clean edge columns (remove emojis if leftover)
     if "run_line_edge" in df_filtered.columns:
         df_filtered["run_line_edge"] = df_filtered["run_line_edge"].astype(str).str.replace("✅ ", "").str.replace("❌ ", "")
     if "ou_edge" in df_filtered.columns:
@@ -95,7 +100,7 @@ with tab2:
     st.write(f"Showing {len(df_display)} predictions from {selected_log_date} with confidence ≥ {min_conf}")
     st.dataframe(df_display.reset_index(drop=True), use_container_width=True)
 
-    # === Footer Summary ===
+    # === Footer Summary
     st.markdown("---")
     st.subheader("📊 Model Summary")
 
