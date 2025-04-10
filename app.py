@@ -67,42 +67,62 @@ with tab2:
     results_df = pd.read_csv(RESULTS_LOG)
     results_df['home_win_prob'] = results_df['home_win_prob'].astype(float).round(3)
 
-    # 🔽 Dropdown of all logged dates
+    # 🔽 Date filter
     all_dates = sorted(results_df['date'].unique(), reverse=True)
     selected_log_date = st.selectbox("Select a log date", all_dates)
 
-    # Filter to selected date
+    # Filter to selected day
     df_filtered = results_df[results_df['date'] == selected_log_date].copy()
 
-    # Map predicted and actual winner to team names
+    # Map team names to predicted/actual
     df_filtered["predicted_winner"] = df_filtered.apply(
-        lambda row: row["home_team"] if row["predicted_winner"] == "home"
-        else row["away_team"], axis=1)
-
+        lambda row: row["home_team"] if row["predicted_winner"] == "home" else row["away_team"], axis=1)
     df_filtered["actual_winner"] = df_filtered.apply(
-        lambda row: row["home_team"] if row["actual_winner"] == "home"
-        else row["away_team"], axis=1)
+        lambda row: row["home_team"] if row["actual_winner"] == "home" else row["away_team"], axis=1)
+    df_filtered["is_correct"] = df_filtered["is_correct"].apply(lambda x: "✅" if x else "❌")
 
-    # ✅/❌ formatting for is_correct
-    df_filtered["is_correct"] = df_filtered["is_correct"].apply(
-        lambda x: "✅" if x else "❌"
-    )
+    # Accuracy summary
+    total_day = len(df_filtered)
+    correct_day = (df_filtered["is_correct"] == "✅").sum()
+    accuracy_day = correct_day / total_day if total_day else 0
 
-    # Summary metrics
-    total = len(df_filtered)
-    correct = (df_filtered["is_correct"] == "✅").sum()
-    accuracy = correct / total if total else 0
-
-    st.metric("📈 Daily Accuracy", f"{accuracy:.2%}")
-    st.metric("🧠 Predictions Logged", total)
+    st.metric("📈 Daily Accuracy", f"{accuracy_day:.2%}")
+    st.metric("🧠 Predictions Logged", total_day)
 
     # 🔥 Confidence filter
     min_conf = st.slider("Minimum Confidence 🔥 Level (1–5)", 1, 5, 1)
     df_filtered["conf_score"] = df_filtered["confidence"].apply(lambda x: len(str(x)))
     df_filtered = df_filtered[df_filtered["conf_score"] >= min_conf]
 
-    # Display table
+    # Show filtered table
     df_display = df_filtered.drop(columns=["conf_score"])
     st.write(f"✅ Showing {len(df_display)} predictions from {selected_log_date} with confidence ≥ {min_conf}")
     st.dataframe(df_display.reset_index(drop=True), use_container_width=True)
+
+    # === Footer Summary ===
+    st.markdown("---")
+    st.subheader("📊 Model Summary")
+
+    # Daily stats
+    wins_today = (df_filtered["is_correct"] == "✅").sum()
+    losses_today = (df_filtered["is_correct"] == "❌").sum()
+
+    # Season stats
+    season_df = results_df.copy()
+    season_df = season_df[season_df["actual_winner"].isin(["home", "away"])]
+    total_season = len(season_df)
+    correct_season = season_df["is_correct"].sum() if season_df["is_correct"].dtype != "object" else (season_df["is_correct"] == True).sum()
+    incorrect_season = total_season - correct_season
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(f"### 🔁 {selected_log_date} Summary")
+        st.markdown(f"✅ Wins: **{wins_today}**")
+        st.markdown(f"❌ Losses: **{losses_today}**")
+    with col2:
+        st.markdown("### 📅 Season Summary")
+        st.markdown(f"🏟️ Total Picks: **{total_season}**")
+        st.markdown(f"✅ Wins: **{correct_season}**")
+        st.markdown(f"❌ Losses: **{incorrect_season}**")
+
 
