@@ -5,7 +5,6 @@ import os
 import joblib
 import subprocess
 
-# === Date setup ===
 DATE_TODAY = datetime.date.today().isoformat()
 
 # === File paths ===
@@ -15,28 +14,27 @@ BATTING_PATH = "mlb_batting_stats_2025.csv"
 STRENGTH_PATH = "team_strengths.csv"
 ROLLING_STATS_PATH = "team_rolling_stats_2025.csv"
 MODEL_PATH = "mlb_win_model.pkl"
-OUTPUT_CSV = f"predictions_{DATE_TODAY}.csv"
+OUTPUT_CSV = "predictions_latest.csv"  # <== always export to this!
 
 # === Load CSVs ===
 def load_csv(path):
     return pd.read_csv(path) if os.path.exists(path) else pd.DataFrame()
 
-# === Step 1: Check pending_boxscores.csv for today's games
 def ensure_boxscore_data_for_today():
     if not os.path.exists(BOX_PATH):
-        print("⚠️ pending_boxscores.csv not found. Attempting to generate it...")
+        print("⚠️ pending_boxscores.csv not found. Generating it...")
         subprocess.run(["python", "build_pending_boxscores.py"])
         return
 
     df = pd.read_csv(BOX_PATH)
     if DATE_TODAY not in df['date'].astype(str).values:
-        print(f"⚠️ No games for today ({DATE_TODAY}) found. Rebuilding pending_boxscores.csv...")
+        print(f"⚠️ No games for today ({DATE_TODAY}) found. Rebuilding...")
         subprocess.run(["python", "build_pending_boxscores.py"])
 
-# === Step 2: Run the check/generation
+# === Generate boxscores if needed
 ensure_boxscore_data_for_today()
 
-# === Load all required data
+# === Load data
 games = load_csv(BOX_PATH)
 pitching = load_csv(PITCHING_PATH)
 batting = load_csv(BATTING_PATH)
@@ -44,19 +42,18 @@ rolling_stats = load_csv(ROLLING_STATS_PATH)
 strengths_df = load_csv(STRENGTH_PATH)
 team_strengths = dict(zip(strengths_df['team'], strengths_df['strength']))
 
-# === Filter for today
+games['date'] = pd.to_datetime(games['date']).dt.date.astype(str)
 todays_games = games[games['date'] == DATE_TODAY].copy()
 if todays_games.empty:
     print(f"No games found for today: {DATE_TODAY}")
     exit()
 
-# === Load model
 if not os.path.exists(MODEL_PATH):
     print(f"❌ Model not found at {MODEL_PATH}")
     exit()
 model = joblib.load(MODEL_PATH)
 
-# === Build features
+# === Feature engineering
 def build_features(row):
     gamePk = row['gamePk']
 
@@ -92,7 +89,6 @@ features_df['home_team'] = todays_games['home_team']
 features_df['away_team'] = todays_games['away_team']
 features_df = pd.get_dummies(features_df, columns=['home_team', 'away_team'])
 
-# === Align with model
 missing_cols = [col for col in model.get_booster().feature_names if col not in features_df.columns]
 for col in missing_cols:
     features_df[col] = 0
@@ -118,7 +114,7 @@ def add_confidence(prob):
 
 todays_games['confidence'] = todays_games['home_win_prob'].apply(add_confidence)
 
-# === Output
+# === Export to fixed name
 cols = ['date', 'gamePk', 'home_team', 'away_team', 'home_win_prob', 'confidence']
 todays_games[cols].to_csv(OUTPUT_CSV, index=False)
 print(f"✅ Saved predictions to {OUTPUT_CSV}")

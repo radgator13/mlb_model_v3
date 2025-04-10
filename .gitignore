@@ -11,3 +11,9 @@ __pycache__/
 # Ignore temporary files
 *.csv
 predictions_*.csv
+
+# Ignore all daily prediction files
+predictions_*.csv
+
+# Allow one "live" prediction file
+!predictions_latest.csv
