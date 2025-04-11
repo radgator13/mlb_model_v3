@@ -154,6 +154,8 @@ if not os.path.exists(ODDS_PATH):
 
 odds_df = load_csv(ODDS_PATH)
 if 'gamePk' in odds_df and 'run_line' in odds_df and 'ou_line' in odds_df:
+    odds_df = odds_df.sort_values(by=['gamePk']) \
+                     .drop_duplicates(subset='gamePk', keep='first')
     preds_df = preds_df.merge(odds_df[['gamePk', 'run_line', 'ou_line']], on='gamePk', how='left')
 else:
     preds_df['run_line'] = None

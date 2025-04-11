@@ -1,28 +1,16 @@
 date,gamePk,home_team,away_team,home_win_prob,confidence,predicted_margin,run_line,run_line_edge,predicted_total_runs,ou_line,ou_edge
 2025-04-11,778375,Cleveland Guardians,Kansas City Royals,0.45150214,🔥,0.0036596726,-1.5,Cleveland Guardians -1.5 Cover,8.446909,7.0,Over 7.0
-2025-04-11,778375,Cleveland Guardians,Kansas City Royals,0.45150214,🔥,0.0036596726,-1.5,Cleveland Guardians -1.5 Cover,8.446909,7.5,Over 7.5
 2025-04-11,778374,Cincinnati Reds,Pittsburgh Pirates,0.4687667,🔥,1.5466288,-1.5,Cincinnati Reds -1.5 Cover,5.6136208,8.0,Under 8.0
-2025-04-11,778374,Cincinnati Reds,Pittsburgh Pirates,0.4687667,🔥,1.5466288,-1.5,Cincinnati Reds -1.5 Cover,5.6136208,8.5,Under 8.5
 2025-04-11,778367,Tampa Bay Rays,Atlanta Braves,0.43178213,🔥,0.09683717,-1.5,Tampa Bay Rays -1.5 Cover,6.1927276,9.0,Under 9.0
-2025-04-11,778367,Tampa Bay Rays,Atlanta Braves,0.43178213,🔥,0.09683717,-1.5,Tampa Bay Rays -1.5 Cover,6.1927276,8.5,Under 8.5
-2025-04-11,778370,New York Yankees,San Francisco Giants,0.35412148,🔥🔥,0.31407213,-1.5,New York Yankees -1.5 Cover,5.682939,8.0,Under 8.0
 2025-04-11,778370,New York Yankees,San Francisco Giants,0.35412148,🔥🔥,0.31407213,-1.5,New York Yankees -1.5 Cover,5.682939,8.0,Under 8.0
 2025-04-11,778369,Miami Marlins,Washington Nationals,0.36456612,🔥🔥,-10.334338,1.5,Washington Nationals +1.5 Cover,6.370481,8.0,Under 8.0
-2025-04-11,778369,Miami Marlins,Washington Nationals,0.36456612,🔥🔥,-10.334338,-1.5,Miami Marlins -1.5 Cover,6.370481,7.5,Under 7.5
 2025-04-11,778366,Chicago White Sox,Boston Red Sox,0.57822704,🔥,3.5248234,1.5,Boston Red Sox +1.5 Cover,5.9704785,8.0,Under 8.0
-2025-04-11,778366,Chicago White Sox,Boston Red Sox,0.57822704,🔥,3.5248234,1.5,Boston Red Sox +1.5 Cover,5.9704785,7.5,Under 7.5
 2025-04-11,778368,Houston Astros,Los Angeles Angels,0.35412148,🔥🔥,-3.5498078,-1.5,Houston Astros -1.5 Cover,3.7937524,8.5,Under 8.5
-2025-04-11,778368,Houston Astros,Los Angeles Angels,0.35412148,🔥🔥,-3.5498078,-1.5,Houston Astros -1.5 Cover,3.7937524,9.0,Under 9.0
 2025-04-11,778363,Minnesota Twins,Detroit Tigers,0.3517065,🔥🔥,0.73040205,1.5,Detroit Tigers +1.5 Cover,6.6602254,7.5,Under 7.5
-2025-04-11,778363,Minnesota Twins,Detroit Tigers,0.3517065,🔥🔥,0.73040205,1.5,Detroit Tigers +1.5 Cover,6.6602254,8.5,Under 8.5
-2025-04-11,778365,St. Louis Cardinals,Philadelphia Phillies,0.6385141,🔥🔥,-2.264897,1.5,Philadelphia Phillies +1.5 Cover,8.086446,7.5,Over 7.5
 2025-04-11,778365,St. Louis Cardinals,Philadelphia Phillies,0.6385141,🔥🔥,-2.264897,1.5,Philadelphia Phillies +1.5 Cover,8.086446,7.5,Over 7.5
 2025-04-11,778361,San Diego Padres,Colorado Rockies,0.6131936,🔥🔥,-1.0783627,-1.5,San Diego Padres -1.5 Cover,4.3156924,7.5,Under 7.5
-2025-04-11,778360,Seattle Mariners,Texas Rangers,0.7551176,🔥🔥🔥,2.7106333,1.5,Texas Rangers +1.5 Cover,6.5583615,6.5,Over 6.5
 2025-04-11,778360,Seattle Mariners,Texas Rangers,0.7551176,🔥🔥🔥,2.7106333,-1.5,Seattle Mariners -1.5 Cover,6.5583615,7.0,Under 7.0
 2025-04-11,778364,Arizona Diamondbacks,Milwaukee Brewers,0.48053008,🔥,0.038485274,-1.5,Arizona Diamondbacks -1.5 Cover,4.5951633,9.0,Under 9.0
-2025-04-11,778364,Arizona Diamondbacks,Milwaukee Brewers,0.48053008,🔥,0.038485274,-1.5,Arizona Diamondbacks -1.5 Cover,4.5951633,8.5,Under 8.5
 2025-04-11,778358,Athletics,New York Mets,0.33620936,🔥🔥,0.9532443,,N/A,6.632596,,N/A
 2025-04-11,778356,Los Angeles Dodgers,Chicago Cubs,0.481958,🔥,0.53056294,-1.5,Los Angeles Dodgers -1.5 Cover,3.7377033,8.0,Under 8.0
-2025-04-11,778356,Los Angeles Dodgers,Chicago Cubs,0.481958,🔥,0.53056294,-1.5,Los Angeles Dodgers -1.5 Cover,3.7377033,8.5,Under 8.5
-2025-04-11,778372,Baltimore Orioles,Toronto Blue Jays,0.51434064,🔥,0.75067943,-1.5,Baltimore Orioles -1.5 Cover,7.797065,8.0,Under 8.0
+2025-04-11,778372,Baltimore Orioles,Toronto Blue Jays,0.51434064,🔥,0.75067943,,N/A,7.797065,,N/A
