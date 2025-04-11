@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>1ac1a4b9-2c08-49bf-a52c-f1f596824993</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>MLB_Model.py</StartupFile>
+    <StartupFile>run_pipeline.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,7 +22,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="app.py" />
+    <Compile Include="backfill_results.py" />
     <Compile Include="build_pending_boxscores.py" />
+    <Compile Include="clean_results_log.py" />
+    <Compile Include="fetch_odds.py" />
     <Compile Include="fill_missing_team_stats.py" />
     <Compile Include="generate_rolling_stats.py" />
     <Compile Include="mlb_batting_scraper.py" />
@@ -33,6 +36,7 @@
     <Compile Include="mlb_pitching_stats.py" />
     <Compile Include="mlb_starting_lineups.py" />
     <Compile Include="predict_today.py" />
+    <Compile Include="run_pipeline.py" />
     <Compile Include="train_model.py" />
   </ItemGroup>
   <ItemGroup>
