@@ -31,7 +31,7 @@ subprocess.run(["python", "fetch_odds.py"], check=True)
 print("🧠 Step 3: Running model predictions...")
 subprocess.run(["python", "predict_today.py"], check=True)
 
-# === Step 4: Archive prediction file
+# === Step 4: Archive today's prediction file
 os.makedirs(ARCHIVE_FOLDER, exist_ok=True)
 if os.path.exists(LATEST_FILE):
     shutil.copy(LATEST_FILE, TODAY_FILE)
@@ -40,13 +40,24 @@ if os.path.exists(LATEST_FILE):
 # === Step 5: Log Results for Today & Yesterday
 def log_results(prediction_file, date_str):
     if not os.path.exists(prediction_file) or not os.path.exists(BOX_FILE):
+        print(f"❌ Skipping {date_str}: Missing prediction or boxscore file.")
         return
 
     pred_df = pd.read_csv(prediction_file)
     box_df = pd.read_csv(BOX_FILE)[['gamePk', 'home_runs', 'away_runs']]
-    merged = pred_df.merge(box_df, on="gamePk", how="left")
 
-    # Skip games without final scores
+    # Check for missing gamePk matches before merging
+    missing_gamepks = set(pred_df['gamePk']) - set(box_df['gamePk'])
+    if missing_gamepks:
+        print(f"⚠️ {len(missing_gamepks)} game(s) in predictions not found in boxscore:")
+        for g in missing_gamepks:
+            print(f" - Missing gamePk: {g}")
+        missed_rows = pred_df[pred_df['gamePk'].isin(missing_gamepks)]
+        missed_rows.to_csv("missed_results_debug.csv", index=False)
+        print(f"⚠️ Saved missing predictions to missed_results_debug.csv")
+
+    # Merge predictions with actual results
+    merged = pred_df.merge(box_df, on="gamePk", how="left")
     merged = merged.dropna(subset=["home_runs", "away_runs"])
     if merged.empty:
         print(f"⏳ No completed games to log for {date_str}")
@@ -81,6 +92,7 @@ def log_results(prediction_file, date_str):
     merged.to_csv(RESULTS_LOG, index=False)
     print(f"✅ Logged {len(merged)} results to {RESULTS_LOG}")
 
+# Score today and yesterday
 log_results(TODAY_FILE, DATE_TODAY)
 log_results(YESTERDAY_FILE, DATE_YESTERDAY)
 
@@ -94,10 +106,10 @@ subprocess.run([
 subprocess.run(["git", "commit", "-m", f"📈 Full pipeline update for {DATE_TODAY}"], check=False)
 subprocess.run(["git", "push", "origin", "master"], check=True)
 
-# === Step 7: Clean duplicates
+# === Step 7: Clean duplicates in results log
 if os.path.exists(RESULTS_LOG):
     df = pd.read_csv(RESULTS_LOG)
-    df = df[df['actual_winner'].isin(['home', 'away'])]
+    df = df[df['actual_winner'].isin(['home', 'away'])]  # remove tie/incomplete
     df = df.drop_duplicates(subset=["date", "gamePk"], keep="first")
     df = df.sort_values(by=["date", "gamePk"]).reset_index(drop=True)
     df.to_csv(RESULTS_LOG, index=False)
