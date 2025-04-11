@@ -56,6 +56,9 @@ if todays_games.empty:
     print(f"No games found for today: {DATE_TODAY}")
     exit()
 
+# === Debug log for rolling lookups
+rolling_debug_log = []
+
 # === Feature engineering
 def build_features(row):
     gamePk = row['gamePk']
@@ -66,6 +69,13 @@ def build_features(row):
 
     def rolling_stat(side, col):
         df_sub = rolling[(rolling['gamePk'] == gamePk) & (rolling['team_side'] == side)]
+        rolling_debug_log.append({
+            'gamePk': gamePk,
+            'team_side': side,
+            'feature': col,
+            'match_found': not df_sub.empty,
+            'value': df_sub[col].values[0] if not df_sub.empty else None
+        })
         return df_sub[col].values[0] if not df_sub.empty else np.nan
 
     return pd.Series({
@@ -91,7 +101,11 @@ features_df['home_team'] = todays_games['home_team']
 features_df['away_team'] = todays_games['away_team']
 features_df = pd.get_dummies(features_df, columns=['home_team', 'away_team'])
 
-# === Debugging missing data
+# === Write rolling stat debug file
+pd.DataFrame(rolling_debug_log).to_csv("rolling_stat_lookup_debug.csv", index=False)
+print("🐞 Debug log saved: rolling_stat_lookup_debug.csv")
+
+# === Missing value check
 print("🔍 Feature DF shape (pre-dropna):", features_df.shape)
 missing_values = features_df.isna().sum()
 missing_summary = missing_values[missing_values > 0]
@@ -99,13 +113,12 @@ if not missing_summary.empty:
     print("⚠️ Missing values detected:")
     print(missing_summary)
 
-# Save skipped rows
 problematic = features_df[features_df.isna().any(axis=1)]
 if not problematic.empty:
     problematic.to_csv("skipped_predictions_debug.csv", index=False)
     print(f"⚠️ Saved rows with missing data to: skipped_predictions_debug.csv")
 
-# Drop incomplete rows before prediction
+# === Drop incomplete rows before prediction
 features_df = features_df.dropna()
 
 # === Align to model
@@ -134,44 +147,38 @@ def confidence(prob):
 
 preds_df['confidence'] = preds_df['home_win_prob'].apply(confidence)
 
-# === Odds fallback: try fetching if missing
+# === Odds merging
 if not os.path.exists(ODDS_PATH):
     print(f"⚠️ Odds file not found: {ODDS_PATH}. Attempting to fetch...")
     subprocess.run(["python", "fetch_odds.py"], check=False)
 
-# Load odds safely
 odds_df = load_csv(ODDS_PATH)
 if 'gamePk' in odds_df and 'run_line' in odds_df and 'ou_line' in odds_df:
     preds_df = preds_df.merge(odds_df[['gamePk', 'run_line', 'ou_line']], on='gamePk', how='left')
 else:
     preds_df['run_line'] = None
     preds_df['ou_line'] = None
-    print(f"⚠️ Odds still unavailable or malformed — skipping edge calculations.")
+    print("⚠️ Odds missing or malformed.")
 
-# === Run line edge (defensive)
+# === Run line edge
 def run_line_edge(row):
-    try:
-        if pd.isna(row['run_line']):
-            return "N/A"
-        team = row['home_team'] if row['run_line'] < 0 else row['away_team']
-        side = "-1.5" if row['run_line'] < 0 else "+1.5"
-        return f"{team} {side} Cover"
-    except:
+    if pd.isna(row['run_line']):
         return "N/A"
-
-# === O/U edge (defensive)
-def ou_edge(row):
-    try:
-        if pd.isna(row['ou_line']) or pd.isna(row['predicted_total_runs']):
-            return "N/A"
-        return f"Over {row['ou_line']}" if row['predicted_total_runs'] > row['ou_line'] else f"Under {row['ou_line']}"
-    except:
-        return "N/A"
+    team = row['home_team'] if row['run_line'] < 0 else row['away_team']
+    side = "-1.5" if row['run_line'] < 0 else "+1.5"
+    return f"{team} {side} Cover"
 
 preds_df['run_line_edge'] = preds_df.apply(run_line_edge, axis=1)
+
+# === O/U edge
+def ou_edge(row):
+    if pd.isna(row['ou_line']) or pd.isna(row['predicted_total_runs']):
+        return "N/A"
+    return f"Over {row['ou_line']}" if row['predicted_total_runs'] > row['ou_line'] else f"Under {row['ou_line']}"
+
 preds_df['ou_edge'] = preds_df.apply(ou_edge, axis=1)
 
-# === Save predictions
+# === Save
 cols = [
     'date', 'gamePk', 'home_team', 'away_team',
     'home_win_prob', 'confidence',
