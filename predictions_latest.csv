@@ -1,16 +1,1 @@
 date,gamePk,home_team,away_team,home_win_prob,confidence,predicted_margin,run_line,run_line_edge,predicted_total_runs,ou_line,ou_edge
-2025-04-11,778375,Cleveland Guardians,Kansas City Royals,0.6493651,🔥🔥,-0.38198763,-1.5,Cleveland Guardians -1.5 Cover,3.784102,7.0,Under 7.0
-2025-04-11,778374,Cincinnati Reds,Pittsburgh Pirates,0.59423363,🔥,-0.14868318,-1.5,Cincinnati Reds -1.5 Cover,3.881322,8.5,Under 8.5
-2025-04-11,778372,Baltimore Orioles,Toronto Blue Jays,0.70437753,🔥🔥🔥,1.3498454,1.5,Toronto Blue Jays +1.5 Cover,3.3395548,8.0,Under 8.0
-2025-04-11,778367,Tampa Bay Rays,Atlanta Braves,0.70437753,🔥🔥🔥,0.53713065,-1.5,Tampa Bay Rays -1.5 Cover,5.7210565,8.5,Under 8.5
-2025-04-11,778370,New York Yankees,San Francisco Giants,0.6493651,🔥🔥,-0.40008077,-1.5,New York Yankees -1.5 Cover,3.256555,8.0,Under 8.0
-2025-04-11,778369,Miami Marlins,Washington Nationals,0.59423363,🔥,-9.9417,1.5,Washington Nationals +1.5 Cover,4.216147,8.0,Under 8.0
-2025-04-11,778366,Chicago White Sox,Boston Red Sox,0.6532773,🔥🔥,1.7394427,1.5,Boston Red Sox +1.5 Cover,3.7615805,8.0,Under 8.0
-2025-04-11,778368,Houston Astros,Los Angeles Angels,0.6493651,🔥🔥,-2.9190228,-1.5,Houston Astros -1.5 Cover,3.2387857,8.5,Under 8.5
-2025-04-11,778363,Minnesota Twins,Detroit Tigers,0.59423363,🔥,-0.14868318,1.5,Detroit Tigers +1.5 Cover,3.3810773,7.5,Under 7.5
-2025-04-11,778365,St. Louis Cardinals,Philadelphia Phillies,0.6532773,🔥🔥,-1.262306,1.5,Philadelphia Phillies +1.5 Cover,4.973354,7.5,Under 7.5
-2025-04-11,778361,San Diego Padres,Colorado Rockies,0.6493651,🔥🔥,-0.34780478,-1.5,San Diego Padres -1.5 Cover,3.2644978,7.5,Under 7.5
-2025-04-11,778360,Seattle Mariners,Texas Rangers,0.70437753,🔥🔥🔥,1.8884177,1.5,Texas Rangers +1.5 Cover,3.778994,6.5,Under 6.5
-2025-04-11,778364,Arizona Diamondbacks,Milwaukee Brewers,0.70437753,🔥🔥🔥,-0.5695399,,N/A,3.2102306,,N/A
-2025-04-11,778358,Athletics,New York Mets,0.59423363,🔥,-0.14868318,,N/A,3.8251987,,N/A
-2025-04-11,778356,Los Angeles Dodgers,Chicago Cubs,0.70437753,🔥🔥🔥,1.2907113,-1.5,Los Angeles Dodgers -1.5 Cover,3.2008433,8.0,Under 8.0

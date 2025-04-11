@@ -86,9 +86,27 @@ def build_features(row):
     })
 
 features_df = todays_games.apply(build_features, axis=1)
+features_df['gamePk'] = todays_games['gamePk']
 features_df['home_team'] = todays_games['home_team']
 features_df['away_team'] = todays_games['away_team']
 features_df = pd.get_dummies(features_df, columns=['home_team', 'away_team'])
+
+# === Debugging missing data
+print("🔍 Feature DF shape (pre-dropna):", features_df.shape)
+missing_values = features_df.isna().sum()
+missing_summary = missing_values[missing_values > 0]
+if not missing_summary.empty:
+    print("⚠️ Missing values detected:")
+    print(missing_summary)
+
+# Save skipped rows
+problematic = features_df[features_df.isna().any(axis=1)]
+if not problematic.empty:
+    problematic.to_csv("skipped_predictions_debug.csv", index=False)
+    print(f"⚠️ Saved rows with missing data to: skipped_predictions_debug.csv")
+
+# Drop incomplete rows before prediction
+features_df = features_df.dropna()
 
 # === Align to model
 def align(df, model):
@@ -100,9 +118,10 @@ def align(df, model):
 X = align(features_df.copy(), win_model)
 
 # === Predict
-todays_games['home_win_prob'] = win_model.predict_proba(X)[:, 1]
-todays_games['predicted_margin'] = margin_model.predict(X)
-todays_games['predicted_total_runs'] = total_model.predict(X)
+preds_df = todays_games[todays_games['gamePk'].isin(features_df['gamePk'])].copy()
+preds_df['home_win_prob'] = win_model.predict_proba(X)[:, 1]
+preds_df['predicted_margin'] = margin_model.predict(X)
+preds_df['predicted_total_runs'] = total_model.predict(X)
 
 # === Confidence 🔥
 def confidence(prob):
@@ -113,16 +132,15 @@ def confidence(prob):
     elif delta >= 0.1: return "🔥🔥"
     else: return "🔥"
 
-todays_games['confidence'] = todays_games['home_win_prob'].apply(confidence)
+preds_df['confidence'] = preds_df['home_win_prob'].apply(confidence)
 
-# === Load real odds file (from fetch_odds.py)
+# === Odds merging
 if not os.path.exists(ODDS_PATH):
     print(f"❌ Odds file not found: {ODDS_PATH}. Please run fetch_odds.py first.")
     exit()
 
-odds_df = load_csv(ODDS_PATH)
-odds_df = odds_df[['gamePk', 'run_line', 'ou_line']]
-todays_games = todays_games.merge(odds_df, on='gamePk', how='left')
+odds_df = load_csv(ODDS_PATH)[['gamePk', 'run_line', 'ou_line']]
+preds_df = preds_df.merge(odds_df, on='gamePk', how='left')
 
 # === Run line edge (clean format)
 def run_line_edge(row):
@@ -132,7 +150,7 @@ def run_line_edge(row):
     side = "-1.5" if row['run_line'] < 0 else "+1.5"
     return f"{team} {side} Cover"
 
-todays_games['run_line_edge'] = todays_games.apply(run_line_edge, axis=1)
+preds_df['run_line_edge'] = preds_df.apply(run_line_edge, axis=1)
 
 # === O/U edge (clean format)
 def ou_edge(row):
@@ -140,9 +158,9 @@ def ou_edge(row):
         return "N/A"
     return f"Over {row['ou_line']}" if row['predicted_total_runs'] > row['ou_line'] else f"Under {row['ou_line']}"
 
-todays_games['ou_edge'] = todays_games.apply(ou_edge, axis=1)
+preds_df['ou_edge'] = preds_df.apply(ou_edge, axis=1)
 
-# === Save
+# === Save predictions
 cols = [
     'date', 'gamePk', 'home_team', 'away_team',
     'home_win_prob', 'confidence',
@@ -150,9 +168,16 @@ cols = [
     'predicted_total_runs', 'ou_line', 'ou_edge'
 ]
 
-todays_games[cols].to_csv(OUTPUT_CSV, index=False)
+preds_df[cols].to_csv(OUTPUT_CSV, index=False)
 os.makedirs("predictions", exist_ok=True)
-todays_games[cols].to_csv(ARCHIVE_CSV, index=False)
+preds_df[cols].to_csv(ARCHIVE_CSV, index=False)
 
 print(f"✅ Saved predictions to:\n- {OUTPUT_CSV}\n- {ARCHIVE_CSV}")
-print(todays_games[cols])
+print(preds_df[cols])
+
+# === Final validation
+expected_gamePks = set(todays_games['gamePk'])
+predicted_gamePks = set(preds_df['gamePk'])
+missed = expected_gamePks - predicted_gamePks
+if missed:
+    print(f"⚠️ {len(missed)} game(s) skipped due to incomplete features: {missed}")
