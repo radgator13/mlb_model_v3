@@ -134,30 +134,41 @@ def confidence(prob):
 
 preds_df['confidence'] = preds_df['home_win_prob'].apply(confidence)
 
-# === Odds merging
+# === Odds fallback: try fetching if missing
 if not os.path.exists(ODDS_PATH):
-    print(f"❌ Odds file not found: {ODDS_PATH}. Please run fetch_odds.py first.")
-    exit()
+    print(f"⚠️ Odds file not found: {ODDS_PATH}. Attempting to fetch...")
+    subprocess.run(["python", "fetch_odds.py"], check=False)
 
-odds_df = load_csv(ODDS_PATH)[['gamePk', 'run_line', 'ou_line']]
-preds_df = preds_df.merge(odds_df, on='gamePk', how='left')
+# Load odds safely
+odds_df = load_csv(ODDS_PATH)
+if 'gamePk' in odds_df and 'run_line' in odds_df and 'ou_line' in odds_df:
+    preds_df = preds_df.merge(odds_df[['gamePk', 'run_line', 'ou_line']], on='gamePk', how='left')
+else:
+    preds_df['run_line'] = None
+    preds_df['ou_line'] = None
+    print(f"⚠️ Odds still unavailable or malformed — skipping edge calculations.")
 
-# === Run line edge (clean format)
+# === Run line edge (defensive)
 def run_line_edge(row):
-    if pd.isna(row['run_line']):
+    try:
+        if pd.isna(row['run_line']):
+            return "N/A"
+        team = row['home_team'] if row['run_line'] < 0 else row['away_team']
+        side = "-1.5" if row['run_line'] < 0 else "+1.5"
+        return f"{team} {side} Cover"
+    except:
         return "N/A"
-    team = row['home_team'] if row['run_line'] < 0 else row['away_team']
-    side = "-1.5" if row['run_line'] < 0 else "+1.5"
-    return f"{team} {side} Cover"
+
+# === O/U edge (defensive)
+def ou_edge(row):
+    try:
+        if pd.isna(row['ou_line']) or pd.isna(row['predicted_total_runs']):
+            return "N/A"
+        return f"Over {row['ou_line']}" if row['predicted_total_runs'] > row['ou_line'] else f"Under {row['ou_line']}"
+    except:
+        return "N/A"
 
 preds_df['run_line_edge'] = preds_df.apply(run_line_edge, axis=1)
-
-# === O/U edge (clean format)
-def ou_edge(row):
-    if pd.isna(row['ou_line']):
-        return "N/A"
-    return f"Over {row['ou_line']}" if row['predicted_total_runs'] > row['ou_line'] else f"Under {row['ou_line']}"
-
 preds_df['ou_edge'] = preds_df.apply(ou_edge, axis=1)
 
 # === Save predictions
