@@ -14,9 +14,9 @@ date,gamePk,home_team,away_team,home_win_prob,predicted_winner,actual_winner,is_
 2025-04-09,778392,Washington Nationals,Los Angeles Dodgers,0.65605396,home,away,False,🔥🔥,,,,
 2025-04-09,778393,Atlanta Braves,Philadelphia Phillies,0.82906455,home,away,False,🔥🔥🔥🔥,,,,
 2025-04-09,778399,Tampa Bay Rays,Los Angeles Angels,0.8068285,home,home,True,🔥🔥🔥🔥,,,,
-2025-04-10,778371,Colorado Rockies,Milwaukee Brewers,0.6532773,home,home,True,🔥🔥,,,,
-2025-04-10,778373,Kansas City Royals,Minnesota Twins,0.6532773,home,home,True,🔥🔥,,,,
-2025-04-10,778377,Boston Red Sox,Toronto Blue Jays,0.70437753,home,home,True,🔥🔥🔥,-1.5,Boston Red Sox -1.5 Cover,7.5,Under 7.5
-2025-04-10,778378,Cleveland Guardians,Chicago White Sox,0.6493651,home,home,True,🔥🔥,,,,
 2025-04-10,778382,Tampa Bay Rays,Los Angeles Angels,0.6493651,home,away,False,🔥🔥,,,,
+2025-04-10,778378,Cleveland Guardians,Chicago White Sox,0.6493651,home,home,True,🔥🔥,,,,
+2025-04-10,778373,Kansas City Royals,Minnesota Twins,0.6532773,home,home,True,🔥🔥,,,,
+2025-04-10,778371,Colorado Rockies,Milwaukee Brewers,0.6532773,home,home,True,🔥🔥,,,,
+2025-04-10,778377,Boston Red Sox,Toronto Blue Jays,0.70437753,home,home,True,🔥🔥🔥,-1.5,Boston Red Sox -1.5 Cover,7.5,Under 7.5
 2025-04-10,778384,Atlanta Braves,Philadelphia Phillies,0.70437753,home,home,True,🔥🔥🔥,-1.5,Atlanta Braves -1.5 Cover,7.5,Under 7.5
